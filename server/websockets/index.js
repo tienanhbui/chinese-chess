@@ -56,6 +56,11 @@ export default async (expressServer) => {
                     rooms.delete(currentRoom);
                 }
             }
+
+            if (clients.size && clients.has(token)) {
+                clients.delete(token);
+            }
+
             console.log('Client disconnected');
         });
         
