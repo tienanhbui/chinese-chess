@@ -1,8 +1,17 @@
 <script setup>
 import { ref } from 'vue'
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
+const fpPromise = FingerprintJS.load()
 
-const socket = new WebSocket('ws://localhost:3000/websockets');
+    ; (async () => {
+        // Get the visitor identifier when you need it.
+        const fp = await fpPromise
+        const result = await fp.get()
+        
+        const socket = new WebSocket('ws://localhost:3000/websockets?tk=' + result.visitorId);
+
+    })()
 
 </script>
 

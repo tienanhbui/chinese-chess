@@ -1,4 +1,16 @@
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
+import * as url from 'url';
+
+const rooms = new Map();
+const clients = new Map();
+
+function broadcastToClients(clients, message, sender = null) {
+    clients.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN && ws !== sender) {
+            ws.send(JSON.stringify(message));
+        }
+    });
+}
 
 export default async (expressServer) => {
     // Tạo server WebSocket
@@ -7,20 +19,33 @@ export default async (expressServer) => {
         path: "/websockets",
     });
 
-    // Quản lý các phòng
-    const rooms = new Map();
+    setInterval(() => {    
+        broadcastToClients(clients, { type: 'info', message: 'This is a server-wide announcement!' });
+    }, 5000);
 
     wss.on('error', console.error);
 
     // Khi một client kết nối
-    wss.on('connection', (ws) => {
+    wss.on('connection', (ws, req) => {
 
-        console.log('New client connected');
+        const params = url.parse(req.url, true).query;
+        const token = params.tk;
+
+        console.log('New client connected', token);
+        // console.log(`Client readyState: ${ws.readyState}`); // 1 for "OPEN"
+
+        if (!clients.has(token)) {
+            clients.set(token, ws);
+        }
 
         let currentRoom = null;
 
         ws.on('message', (data) => {
             const message = JSON.parse(data);
+            switch (message.type) {
+                case 'join': {break;}
+                case 'create_room': {break;}
+            }
 
         });
 
