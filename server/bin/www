@@ -7,7 +7,9 @@
 import app from '../app.js';
 import createDebug from 'debug';
 import http from 'http';
-import websockets from '../websockets/index.js';
+import Socket from '../websockets/Socket.js';
+import createLobbyRouter from '../websockets/lobby.js';
+
 
 const debug = createDebug('server:server');
 
@@ -24,6 +26,10 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+const websocket = new Socket(server);
+
+app.use('/api', createLobbyRouter(websocket));
+
 /**
  * Listen on provided port, on all network interfaces.
  */
@@ -31,8 +37,6 @@ var server = http.createServer(app);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
-
-websockets(server);
 
 /**
  * Normalize a port into a number, string, or false.
