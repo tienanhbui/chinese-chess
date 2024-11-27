@@ -29,6 +29,14 @@ const server = http.createServer(app);
 
 const websocket = new Socket(server);
 
+/* 
+{
+  gameType: 'tic-tac-toe',
+  clients: [],
+  status: 'playing',
+  data: {}
+}
+*/
 const rooms = new Map();
 
 app.use('/api/lobby', createLobbyRouter(websocket, rooms));

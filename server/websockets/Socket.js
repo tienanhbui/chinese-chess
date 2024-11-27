@@ -16,6 +16,8 @@ export default class Socket {
             path: "/websockets",
         });
 
+        this.wss.binaryType = "arraybuffer";
+
         const interval = setInterval(() => {
 
             this.wss.clients.forEach((client) => {
@@ -46,11 +48,19 @@ export default class Socket {
             });
 
             ws.on('message', (data) => {
-                const message = JSON.parse(data);
-                switch (message.type) {
-                    case 'join': { break; }
-                    case 'create_room': { break; }
+
+                if (data instanceof String) {
+                    const message = JSON.parse(data);
+                    switch (message.type) {
+                        case 'join': { break; }
+                        case 'create_room': { break; }
+                    }
                 }
+
+                if (Buffer.isBuffer(data)) {
+                    ws.send(data);
+                }
+
             });
 
             ws.on('close', () => {

@@ -16,20 +16,20 @@ function createLobbyRouter(socket) {
 
             if (client.userStates.token == token) {
                 client.userStates.gameType = gameType;
+                client.userStates.location = 'lobby';
             }
 
-            if (client.userStates.gameType == gameType) {
+            if (client.userStates.gameType == gameType && client.userStates.location == 'lobby') {
                 clients.push(client);
             }
+            
         });
 
         const clientsMap = clients.map((client) => {
             return {
-                noId: client.userStates.noId
+                noId: client.userStates.noId,
             }
         });
-
-        console.log(clients.length)
 
         for (let i = 0; i < clients.length; i++) {
             const client = clients[i];
