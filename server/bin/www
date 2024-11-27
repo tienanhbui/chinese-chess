@@ -9,6 +9,7 @@ import createDebug from 'debug';
 import http from 'http';
 import Socket from '../websockets/Socket.js';
 import createLobbyRouter from '../websockets/lobby.js';
+import createGameRouter from '../websockets/game.js';
 
 
 const debug = createDebug('server:server');
@@ -24,11 +25,14 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+const server = http.createServer(app);
 
 const websocket = new Socket(server);
 
-app.use('/api', createLobbyRouter(websocket));
+const rooms = new Map();
+
+app.use('/api/lobby', createLobbyRouter(websocket, rooms));
+app.use('/api/game', createGameRouter(websocket, rooms));
 
 /**
  * Listen on provided port, on all network interfaces.

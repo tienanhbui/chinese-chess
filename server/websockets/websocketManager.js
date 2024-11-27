@@ -1,23 +1,21 @@
+import { WebSocket } from "ws";
+
 function addClient(clients, token, ws) {
-    if (!clients.has(token)) {
-        clients.set(token, ws);
-        console.log('New client connected', token);
+
+    if (clients.has(token)) {
+        clients.get(token).close(1008, 'Duplicate connection');
     }
+
+    clients.set(token, ws);
+
+    console.log('New client connected', ws.userStates);
 }
 
-function removeClient(clients, token) {
-    if (clients.size && clients.has(token)) {
+function removeClient(clients, token, ws) {
+    if (clients.has(token) && clients.get(token) === ws) {
         clients.delete(token);
-        console.log('Client disconnected');
+        console.log('Client disconnected', token);
     }
-}
-
-function broadcast(clients, message) {
-    clients.forEach((client) => {
-        if (client.readyState === 1) { // WebSocket.OPEN
-            client.send(JSON.stringify(message));
-        }
-    });
 }
 
 function broadcastToClients(clients, message, sender = null) {
@@ -31,5 +29,5 @@ function broadcastToClients(clients, message, sender = null) {
 export {
     addClient,
     removeClient,
-    broadcast,
+    broadcastToClients,
 }

@@ -1,17 +1,30 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { addClient, removeClient } from "./websocketManager.js"
+import { addClient, broadcastToClients, removeClient } from "./websocketManager.js"
 import * as url from 'url';
+import * as crypto from 'crypto';
 
+const PING_DURATION = 30000;
 export default class Socket {
 
     wss;
     clients = new Map();
 
     constructor(expressServer) {
+
         this.wss = new WebSocketServer({
             server: expressServer,
             path: "/websockets",
         });
+
+        const interval = setInterval(() => {
+
+            this.wss.clients.forEach((client) => {
+                if (!client.isAlive) return client.terminate();
+                client.isAlive = false;
+                client.ping();
+            });
+
+        }, PING_DURATION);
 
         this.wss.on('error', console.error);
 
@@ -20,7 +33,17 @@ export default class Socket {
             const params = url.parse(req.url, true).query;
             const token = params.tk;
 
+            ws.userStates = {
+                token,
+                noId: crypto.createHash('md5').update(new Date().getTime().toString()).digest('hex')
+            }
+
             addClient(this.clients, token, ws);
+
+            ws.isAlive = true;
+            ws.on('pong', () => {
+                ws.isAlive = true
+            });
 
             ws.on('message', (data) => {
                 const message = JSON.parse(data);
@@ -31,7 +54,8 @@ export default class Socket {
             });
 
             ws.on('close', () => {
-                removeClient(this.clients, token);
+                removeClient(this.clients, token, ws);
+                clearInterval(interval);
             });
 
         });

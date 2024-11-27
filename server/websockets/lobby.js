@@ -1,22 +1,48 @@
 import express from 'express';
 
 function createLobbyRouter(socket) {
-  const router = express.Router();
 
-  router.get('/join', (req, res) => {
-    const { roomName } = req.body;
+    const router = express.Router();
 
-    // Gửi thông báo tới tất cả client WebSocket
-    socket.getClients().forEach((client) => {
-      if (client.readyState === 1) { // WebSocket.OPEN
-        client.send(JSON.stringify({ type: 'NEW connect', roomName }));
-      }
+    router.post('/join', (req, res) => {
+
+        const token = req.query.tk;
+        const { gameType } = req.body;
+
+        if (!token) return res.status(401);
+
+        const clients = [];
+        socket.getClients().forEach((client) => {
+
+            if (client.userStates.token == token) {
+                client.userStates.gameType = gameType;
+            }
+
+            if (client.userStates.gameType == gameType) {
+                clients.push(client);
+            }
+        });
+
+        const clientsMap = clients.map((client) => {
+            return {
+                noId: client.userStates.noId
+            }
+        });
+
+        console.log(clients.length)
+
+        for (let i = 0; i < clients.length; i++) {
+            const client = clients[i];
+
+            if (client.readyState === 1) { // WebSocket.OPEN
+                client.send(JSON.stringify({ type: 'jlb', clients: clientsMap }));
+            }
+        }
+
+        res.status(201).json({ message: 'Joined', gameType });
     });
 
-    res.status(201).json({ message: 'NEW connect', roomName });
-  });
-
-  return router;
+    return router;
 }
 
 export default createLobbyRouter;

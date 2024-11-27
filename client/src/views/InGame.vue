@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
+const GAME_TYPE = 'tic-tac-toe';
+
 const fpPromise = FingerprintJS.load()
 
     ; (async () => {
@@ -9,7 +11,11 @@ const fpPromise = FingerprintJS.load()
         const fp = await fpPromise
         const result = await fp.get()
         
-        const socket = new WebSocket('ws://localhost:3000/websockets?tk=' + result.visitorId);
+        const ws = new WebSocket('ws://localhost:3000/websockets?tk=' + result.visitorId);
+
+        ws.onclose = (event) => {
+            console.log('The connection has been closed.');
+        };
 
     })()
 
